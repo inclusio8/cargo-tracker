@@ -1,645 +1,217 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>관세청 UNIPASS - 수입화물진행정보 조회</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- HTML5 QRCode Reader Library -->
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        unipass: {
-                            navy: '#002B49',
-                            blue: '#005bac',
-                            light: '#eaf2f9',
-                            accent: '#f37021',
-                            bg: '#f4f6f9'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        body {
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-        /* Custom scrollbar for mobile feel */
-        ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        #reader video {
-            object-fit: cover !important;
-            border-radius: 0.75rem;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관세청 UNIPASS 수입화물진행정보</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    #reader {
+      width: 100%;
+      background-color: #000;
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+    #reader video {
+      width: 100% !important;
+      height: auto !important;
+      object-fit: cover !important;
+      display: block !important;
+    }
+  </style>
 </head>
-<body class="bg-unipass-bg text-gray-800 pb-16 min-h-screen flex flex-col justify-between">
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen pb-10">
 
-    <div>
-        <!-- Top Official Header Bar -->
-        <header class="bg-unipass-navy text-white shadow-md sticky top-0 z-40">
-            <div class="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <div class="bg-white p-1 rounded-md flex items-center justify-center">
-                        <i class="fa-solid fa-ship text-unipass-navy text-lg"></i>
-                    </div>
-                    <div>
-                        <h1 class="font-bold text-base leading-tight tracking-tight">관세청 UNIPASS</h1>
-                        <p class="text-[10px] text-blue-200">모바일 수입화물 진행정보 서비스</p>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-3 text-sm">
-                    <button id="btn-history-toggle" class="relative p-2 rounded-lg bg-white/10 hover:bg-white/20 transition" title="조회 기록">
-                        <i class="fa-solid fa-clock-rotate-left"></i>
-                        <span id="history-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">0</span>
-                    </button>
-                    <a href="https://unipass.customs.go.kr" target="_blank" rel="noopener noreferrer" class="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition text-xs font-medium flex items-center gap-1">
-                        <span>공식</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                    </a>
-                </div>
-            </div>
-        </header>
+  <!-- 관세청 모바일 헤더 -->
+  <header class="bg-[#003366] text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
+    <div class="flex items-center space-x-2">
+      <div class="bg-white text-[#003366] font-extrabold text-xs px-2 py-1 rounded">UNIPASS</div>
+      <h1 class="font-bold text-base tracking-tight">수입화물진행정보</h1>
+    </div>
+    <span class="text-xs bg-blue-800 px-2 py-0.5 rounded">관세청</span>
+  </header>
 
-        <main class="max-w-md mx-auto px-4 py-4 space-y-4">
+  <main class="max-w-md mx-auto p-4 space-x-0 space-y-4">
 
-            <!-- Info Notice Box -->
-            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-900 flex items-start space-x-2.5">
-                <i class="fa-solid fa-circle-info text-unipass-blue text-sm mt-0.5 shrink-0"></i>
-                <div class="leading-relaxed">
-                    <strong>House B/L 번호로 간편 조회</strong><br/>
-                    화물 운송장의 바코드를 카메라로 스캔하거나 B/L 번호를 직접 입력하여 실시간 수입 통관 진행 상황을 확인하세요.
-                </div>
-            </div>
+    <!-- 바코드 스캐너 카드 -->
+    <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+      <h2 class="text-sm font-bold text-gray-700 mb-2 flex items-center">
+        <svg class="w-4 h-4 mr-1 text-[#003366]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        카메라 바코드/QR 스캔
+      </h2>
 
-            <!-- Search Box Card -->
-            <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
-                <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
-                    <h2 class="font-bold text-gray-900 flex items-center gap-2 text-sm">
-                        <i class="fa-solid fa-magnifying-glass text-unipass-blue"></i>
-                        화물 조회 조건 입력
-                    </h2>
-                    <span class="text-[11px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">House B/L 기준</span>
-                </div>
+      <!-- 카메라 출력 구역 -->
+      <div id="reader" class="mb-3"></div>
 
-                <form id="search-form" onsubmit="handleSearch(event)" class="space-y-3">
-                    <div class="grid grid-cols-3 gap-2">
-                        <!-- Year Selection -->
-                        <div class="col-span-1">
-                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">입항 연도</label>
-                            <select id="search-year" class="w-full bg-gray-50 border border-gray-300 rounded-xl text-xs px-2.5 py-2.5 font-medium focus:ring-2 focus:ring-unipass-blue focus:outline-none">
-                                <option value="2026" selected>2026년</option>
-                                <option value="2025">2025년</option>
-                                <option value="2024">2024년</option>
-                            </select>
-                        </div>
-                        <!-- B/L Number Input -->
-                        <div class="col-span-2">
-                            <label class="block text-[11px] font-semibold text-gray-600 mb-1">House B/L (하우스 B/L)</label>
-                            <div class="relative">
-                                <input type="text" id="hbl-input" placeholder="예: HBL12345678" required uppercase
-                                       class="w-full bg-gray-50 border border-gray-300 rounded-xl text-xs pl-3 pr-9 py-2.5 font-mono font-semibold uppercase focus:ring-2 focus:ring-unipass-blue focus:outline-none placeholder:font-sans placeholder:font-normal placeholder:text-gray-400">
-                                <button type="button" onclick="clearInput()" id="btn-clear-input" class="hidden absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600">
-                                    <i class="fa-solid fa-circle-xmark"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons: Scanner & Submit -->
-                    <div class="grid grid-cols-12 gap-2 pt-1">
-                        <!-- Camera Barcode Scan Button -->
-                        <button type="button" onclick="openScanner()" class="col-span-5 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 font-medium py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition active:scale-[0.98]">
-                            <i class="fa-solid fa-camera text-sm text-indigo-600"></i>
-                            <span>바코드 스캔</span>
-                        </button>
-
-                        <!-- Search Button -->
-                        <button type="submit" class="col-span-7 bg-unipass-blue hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.98]">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <span>수입화물 조회하기</span>
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Quick Samples -->
-                <div class="mt-3 pt-2.5 border-t border-dashed border-gray-200 flex items-center justify-between text-[11px]">
-                    <span class="text-gray-500 font-medium">테스트 샘플 번호:</span>
-                    <div class="flex gap-1.5">
-                        <button type="button" onclick="fillSample('HBL202603891')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-0.5 rounded font-mono font-medium">통관완료</button>
-                        <button type="button" onclick="fillSample('HBL202609923')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-0.5 rounded font-mono font-medium">진행중</button>
-                    </div>
-                </div>
-            </section>
-
-            <section id="results-section" class="hidden space-y-4">
-                
-                <!-- Summary Card -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="bg-unipass-navy text-white px-4 py-3 flex justify-between items-center">
-                        <div>
-                            <span class="text-[10px] text-blue-200 block font-semibold tracking-wider">HOUSE B/L</span>
-                            <span id="res-hbl" class="font-mono text-base font-bold tracking-wide">HBL202603891</span>
-                        </div>
-                        <span id="res-status-badge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-sm">
-                            수입신고수리
-                        </span>
-                    </div>
-
-                    <!-- Key Details Grid -->
-                    <div class="p-4 grid grid-cols-2 gap-3 text-xs bg-white">
-                        <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                            <span class="text-gray-400 block text-[10px]">품명 (Goods)</span>
-                            <span id="res-goods" class="font-semibold text-gray-800 truncate block mt-0.5">전자부품 (PC Hardware Parts)</span>
-                        </div>
-                        <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                            <span class="text-gray-400 block text-[10px]">수량 / 중량</span>
-                            <span id="res-weight" class="font-semibold text-gray-800 block mt-0.5">12 CTN / 145.5 kg</span>
-                        </div>
-                        <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                            <span class="text-gray-400 block text-[10px]">선박/항공편명</span>
-                            <span id="res-vessel" class="font-semibold text-gray-800 truncate block mt-0.5">KE0512 (대한항공)</span>
-                        </div>
-                        <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                            <span class="text-gray-400 block text-[10px]">입항일시</span>
-                            <span id="res-arrival" class="font-semibold text-gray-800 block mt-0.5">2026.03.28 14:20</span>
-                        </div>
-                        <div class="col-span-2 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                            <span class="text-gray-400 block text-[10px]">장치장명 (통관 보세구역)</span>
-                            <span id="res-warehouse" class="font-semibold text-gray-800 block mt-0.5">인천공항 제1화물터미널 보세창고 (04077001)</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Progress Stepper Tracker -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
-                    <h3 class="font-bold text-sm text-gray-900 mb-3 flex items-center justify-between">
-                        <span class="flex items-center gap-1.5">
-                            <i class="fa-solid fa-bars-staggered text-unipass-blue"></i>
-                            통관 진행 단계
-                        </span>
-                        <span class="text-[11px] font-normal text-gray-500">총 7단계 중 <b id="res-step-num" class="text-unipass-blue">7</b>단계 진행</span>
-                    </h3>
-
-                    <!-- Progress Stepper List -->
-                    <div id="timeline-container" class="relative pl-6 space-y-4 border-l-2 border-gray-200 ml-2 py-1">
-                        <!-- Timeline items injected dynamically via JS -->
-                    </div>
-                </div>
-
-                <!-- External Official Link CTA -->
-                <div class="bg-slate-800 text-white rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                    <div class="pr-2">
-                        <p class="font-bold text-xs text-slate-100">관세청 UNIPASS 공식 사이트 연결</p>
-                        <p class="text-[11px] text-slate-400 mt-0.5">공식 원본 통관 신고서류 및 법적 증명 조회</p>
-                    </div>
-                    <a id="btn-unipass-direct" href="#" target="_blank" class="bg-unipass-blue hover:bg-blue-600 text-white font-bold text-xs px-3 py-2 rounded-xl shrink-0 flex items-center gap-1 shadow">
-                        <span>이동</span>
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                    </a>
-                </div>
-            </section>
-
-            <!-- Loading Spinner State -->
-            <div id="loading-spinner" class="hidden my-12 text-center py-8">
-                <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-unipass-blue border-t-transparent"></div>
-                <p class="mt-3 text-xs font-semibold text-gray-600">관세청 유니패스 수입화물 정보 조회 중...</p>
-                <p class="text-[11px] text-gray-400 mt-1">잠시만 기다려 주세요.</p>
-            </div>
-
-            <!-- Empty / Default Initial State -->
-            <div id="initial-empty-state" class="bg-white rounded-2xl border border-gray-200 p-8 text-center text-gray-400 my-4">
-                <i class="fa-solid fa-truck-ramp-box text-4xl text-blue-100 mb-3"></i>
-                <p class="text-xs font-medium text-gray-600">조회할 House B/L 번호를 입력해주세요.</p>
-                <p class="text-[11px] text-gray-400 mt-1">상단 카메라 버튼으로 바코드를 직접 스캔할 수도 있습니다.</p>
-            </div>
-
-        </main>
+      <div class="flex gap-2">
+        <button id="start-btn" onclick="startScanner()" class="flex-1 bg-[#003366] hover:bg-[#002244] text-white py-2.5 rounded text-sm font-bold shadow transition">
+          카메라 켜기
+        </button>
+        <button id="stop-btn" onclick="stopScanner()" class="hidden flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2.5 rounded text-sm font-bold shadow transition">
+          카메라 끄기
+        </button>
+      </div>
+      <p id="camera-status" class="text-xs text-gray-500 mt-2 text-center">버튼을 누르면 카메라 스캐너가 시작됩니다.</p>
     </div>
 
-    <!-- Camera Scanner Fullscreen Modal -->
-    <div id="scanner-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col justify-between p-4">
-        <div class="flex justify-between items-center text-white pt-2 px-1">
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-barcode text-unipass-accent text-lg"></i>
-                <span class="font-bold text-sm">운송장 바코드/QR 스캐너</span>
-            </div>
-            <button onclick="closeScanner()" class="text-gray-300 hover:text-white p-2 rounded-full bg-white/10">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-        </div>
-
-        <!-- Camera Frame Viewport -->
-        <div class="relative my-auto w-full max-w-sm mx-auto aspect-square rounded-2xl overflow-hidden bg-black border-2 border-unipass-blue flex items-center justify-center">
-            <div id="reader" class="w-full h-full"></div>
-
-            <!-- Scanning overlay reticle guide -->
-            <div class="pointer-events-none absolute inset-0 border-2 border-white/20 flex flex-col justify-between p-6">
-                <div class="flex justify-between">
-                    <div class="w-8 h-8 border-t-4 border-l-4 border-unipass-accent"></div>
-                    <div class="w-8 h-8 border-t-4 border-r-4 border-unipass-accent"></div>
-                </div>
-                <div class="text-center">
-                    <span class="bg-black/60 text-white text-[11px] px-3 py-1 rounded-full backdrop-blur-sm">
-                        B/L 바코드를 사각형 안에 맞추세요
-                    </span>
-                </div>
-                <div class="flex justify-between">
-                    <div class="w-8 h-8 border-b-4 border-l-4 border-unipass-accent"></div>
-                    <div class="w-8 h-8 border-b-4 border-r-4 border-unipass-accent"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Controls inside Modal -->
-        <div class="space-y-2 pb-4 text-center">
-            <button onclick="simulateScan()" class="bg-white/10 hover:bg-white/20 text-blue-200 text-xs px-4 py-2 rounded-xl backdrop-blur-sm border border-white/20">
-                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> 카메라인식이 안되나요? (샘플 자동 입력)
-            </button>
-            <p class="text-[11px] text-gray-400">카메라 권한 승인이 필요합니다.</p>
-        </div>
+    <!-- B/L 번호 직접 입력 -->
+    <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+      <label class="block text-sm font-bold text-gray-700 mb-1">House B/L (화물관리번호)</label>
+      <div class="flex gap-2">
+        <input type="text" id="bl-input" placeholder="B/L 번호 입력 (예: HBL12345678)" class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#003366]">
+        <button onclick="searchBL()" class="bg-[#003366] text-white px-4 py-2 rounded text-sm font-bold hover:bg-[#002244]">조회</button>
+      </div>
     </div>
 
-    <!-- History Bottom Drawer / Offcanvas -->
-    <div id="history-drawer" class="fixed inset-0 bg-black/50 z-50 hidden transition-opacity">
-        <div class="absolute bottom-0 inset-x-0 bg-white rounded-t-3xl max-h-[80vh] flex flex-col max-w-md mx-auto shadow-2xl">
-            <div class="p-4 border-b border-gray-100 flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-clock-rotate-left text-unipass-blue"></i>
-                    <h3 class="font-bold text-sm text-gray-900">최근 조회한 B/L 내역</h3>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="clearHistory()" class="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1">전체삭제</button>
-                    <button onclick="toggleHistoryDrawer(false)" class="text-gray-400 hover:text-gray-600 p-1">
-                        <i class="fa-solid fa-xmark text-base"></i>
-                    </button>
-                </div>
-            </div>
+    <!-- 조회 결과 및 관세청 직접 연결 -->
+    <div id="result-card" class="hidden bg-white rounded-lg p-4 shadow-sm border border-gray-200 space-y-3">
+      <div class="flex justify-between items-center border-b pb-2">
+        <span class="text-xs font-bold text-[#003366]">조회된 House B/L</span>
+        <span id="result-bl-no" class="text-sm font-extrabold text-gray-900"></span>
+      </div>
 
-            <!-- History List Area -->
-            <div id="history-list" class="p-4 overflow-y-auto space-y-2.5 flex-1 min-h-[200px] max-h-[400px]">
-                <!-- History Items JS Injected -->
-            </div>
+      <!-- 관세청 유니패스 직접 조회 링크 (실제 정보 확인용) -->
+      <a id="unipass-direct-link" href="#" target="_blank" class="block w-full text-center bg-blue-50 text-[#003366] border border-blue-200 py-2.5 rounded text-xs font-bold hover:bg-blue-100">
+        🔗 관세청 UNIPASS 공식 사이트에서 실시간 진행 확인하기
+      </a>
+
+      <!-- 시뮬레이션 타임라인 -->
+      <div class="border-t pt-3">
+        <p class="text-xs font-bold text-gray-600 mb-2">통관 진행 시뮬레이션 단계</p>
+        <div class="space-y-2 text-xs">
+          <div class="flex items-center text-green-600 font-bold">
+            <span class="w-2 h-2 rounded-full bg-green-600 mr-2"></span> [1] 입항보고 완료 (인천공항)
+          </div>
+          <div class="flex items-center text-green-600 font-bold">
+            <span class="w-2 h-2 rounded-full bg-green-600 mr-2"></span> [2] 보세구역 반입 완료
+          </div>
+          <div class="flex items-center text-blue-600 font-bold">
+            <span class="w-2 h-2 rounded-full bg-blue-600 mr-2"></span> [3] 수입 신고 심사 중 (진행중)
+          </div>
+          <div class="flex items-center text-gray-400">
+            <span class="w-2 h-2 rounded-full bg-gray-300 mr-2"></span> [4] 물품 반출 및 국내 배송
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- App Footer -->
-    <footer class="bg-white border-t border-gray-200 py-3 text-center text-[11px] text-gray-400">
-        <p>대한민국 관세청 유니패스(UNI-PASS) 수입화물 진행정보 모바일 UI</p>
-        <p class="text-[10px] text-gray-300 mt-0.5">공공데이터 포털 오픈 API 연동 규격 호환 모듈</p>
-    </footer>
+    <!-- 최근 조회 기록 -->
+    <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+      <div class="flex justify-between items-center mb-2">
+        <h3 class="text-sm font-bold text-gray-700">최근 조회 기록</h3>
+        <button onclick="clearHistory()" class="text-xs text-red-500 hover:underline">기록 삭제</button>
+      </div>
+      <ul id="history-list" class="divide-y divide-gray-100 text-xs text-gray-600">
+        <li class="py-2 text-center text-gray-400">최근 조회된 기록이 없습니다.</li>
+      </ul>
+    </div>
 
-    <script>
-        // --- State Management ---
-        let html5QrcodeScanner = null;
-        let searchHistory = JSON.parse(localStorage.getItem('unipass_hbl_history') || '[]');
+  </main>
 
-        // Sample Mock Data Generator for Uni-Pass Cargo Tracking
-        const mockDatabase = {
-            'HBL202603891': {
-                hbl: 'HBL202603891',
-                goods: '반도체 가공 장비 부품 (Semiconductor Spare Parts)',
-                weight: '15 CTN / 340.00 KG',
-                vessel: 'KE0512 (대한항공 cargo)',
-                arrival: '2026-03-28 14:20',
-                warehouse: '인천공항 제1화물터미널 (04077001)',
-                status: '수입신고수리',
-                statusColor: 'bg-emerald-500',
-                completedStep: 7,
-                steps: [
-                    { title: '입항보고 제출', date: '2026.03.28 14:00', done: true },
-                    { title: '입항전 제출', date: '2026.03.28 14:30', done: true },
-                    { title: '하선/하차 신고', date: '2026.03.28 16:10', done: true },
-                    { title: '보세구역 반입', date: '2026.03.28 18:00', done: true },
-                    { title: '수입신고 제출', date: '2026.03.29 09:15', done: true },
-                    { title: '수입신고수리 (통관완료)', date: '2026.03.29 11:30', done: true },
-                    { title: '물품 반출 완료', date: '2026.03.29 14:00', done: true }
-                ]
-            },
-            'HBL202609923': {
-                hbl: 'HBL202609923',
-                goods: '의류 샘플 및 원단 (Textile Samples)',
-                weight: '3 CTN / 24.50 KG',
-                vessel: 'OZ0782 (아시아나항공)',
-                arrival: '2026-04-01 08:45',
-                warehouse: '김포공항 세관지정장치장 (02002011)',
-                status: '보세구역장치',
-                statusColor: 'bg-blue-600',
-                completedStep: 4,
-                steps: [
-                    { title: '입항보고 제출', date: '2026.04.01 08:30', done: true },
-                    { title: '입항전 제출', date: '2026.04.01 09:00', done: true },
-                    { title: '하선/하차 신고', date: '2026.04.01 10:20', done: true },
-                    { title: '보세구역 반입', date: '2026.04.01 11:50', done: true },
-                    { title: '수입신고 제출', date: '대기중', done: false },
-                    { title: '수입신고수리', date: '-', done: false },
-                    { title: '물품 반출', date: '-', done: false }
-                ]
-            }
-        };
+  <script>
+    let html5QrcodeScanner = null;
 
-        // --- DOM Elements On Load ---
-        document.addEventListener('DOMContentLoaded', () => {
-            updateHistoryBadge();
-            renderHistoryList();
+    // 스캐너 시작
+    function startScanner() {
+      const statusText = document.getElementById('camera-status');
+      statusText.innerText = '카메라 연결 중...';
 
-            // Toggle history drawer
-            document.getElementById('btn-history-toggle').addEventListener('click', () => {
-                toggleHistoryDrawer(true);
-            });
+      html5QrcodeScanner = new Html5Qrcode("reader");
 
-            // Input listeners
-            const hblInput = document.getElementById('hbl-input');
-            hblInput.addEventListener('input', (e) => {
-                const clearBtn = document.getElementById('btn-clear-input');
-                if (e.target.value.trim().length > 0) {
-                    clearBtn.classList.remove('hidden');
-                } else {
-                    clearBtn.classList.add('hidden');
-                }
-            });
-        });
+      // 안드로이드 Chrome 기본 카메라 백엔드 설정
+      const config = { fps: 10, qrbox: { width: 250, height: 150 } };
 
-        // Clear input text
-        function clearInput() {
-            const hblInput = document.getElementById('hbl-input');
-            hblInput.value = '';
-            document.getElementById('btn-clear-input').classList.add('hidden');
-            hblInput.focus();
+      html5QrcodeScanner.start(
+        { facingMode: "environment" }, 
+        config, 
+        (decodedText) => {
+          // 스캔 성공 시
+          document.getElementById('bl-input').value = decodedText;
+          stopScanner();
+          searchBL(decodedText);
+        },
+        (errorMessage) => {
+          // 스캔 진행 중 (무시)
         }
+      ).then(() => {
+        document.getElementById('start-btn').classList.add('hidden');
+        document.getElementById('stop-btn').classList.remove('hidden');
+        statusText.innerText = '바코드/QR코드를 화면 중앙에 맞춰주세요.';
+      }).catch((err) => {
+        statusText.innerText = '카메라를 열 수 없습니다. 권한 상태 및 다른 앱에서 카메라 사용 중인지 확인해주세요.';
+        console.error(err);
+      });
+    }
 
-        // Fill Sample Text
-        function fillSample(code) {
-            const hblInput = document.getElementById('hbl-input');
-            hblInput.value = code;
-            document.getElementById('btn-clear-input').classList.remove('hidden');
-        }
+    // 스캐너 중지
+    function stopScanner() {
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop().then(() => {
+          html5QrcodeScanner.clear();
+          document.getElementById('start-btn').classList.remove('hidden');
+          document.getElementById('stop-btn').classList.add('hidden');
+          document.getElementById('camera-status').innerText = '카메라가 꺼졌습니다.';
+        }).catch(err => console.error(err));
+      }
+    }
 
-        // --- Handle Search Form Submit ---
-        function handleSearch(e) {
-            e.preventDefault();
-            const year = document.getElementById('search-year').value;
-            const hbl = document.getElementById('hbl-input').value.trim().toUpperCase();
+    // B/L 조회 처리
+    function searchBL(scannedBL = null) {
+      const blNo = scannedBL || document.getElementById('bl-input').value.trim();
+      if (!blNo) {
+        alert('B/L 번호를 입력하거나 스캔해주세요.');
+        return;
+      }
 
-            if (!hbl) return;
+      // 결과 카드 보이기
+      document.getElementById('result-card').classList.remove('hidden');
+      document.getElementById('result-bl-no').innerText = blNo;
 
-            // UI view state transition
-            document.getElementById('initial-empty-state').classList.add('hidden');
-            document.getElementById('results-section').classList.add('hidden');
-            document.getElementById('loading-spinner').classList.remove('hidden');
+      // 관세청 UNIPASS 화물진행정보 직접 이동 링크 생성
+      const unipassUrl = `https://unipass.customs.go.kr/csp/index.do?searchHblNo=${encodeURIComponent(blNo)}`;
+      document.getElementById('unipass-direct-link').href = unipassUrl;
 
-            // Simulate Network / API Call Delay
-            setTimeout(() => {
-                document.getElementById('loading-spinner').classList.add('hidden');
-                
-                // Get or mock data
-                let data = mockDatabase[hbl];
-                if (!data) {
-                    // Generate dynamic fallback mock for any arbitrary B/L entered by user
-                    data = {
-                        hbl: hbl,
-                        goods: '일반 수입 화물 (General Freight Cargo)',
-                        weight: '5 CTN / 68.00 KG',
-                        vessel: 'HJ0102 (한진해운/항공)',
-                        arrival: `${year}.03.15 10:00`,
-                        warehouse: '인천항 제2보세창고 (03004002)',
-                        status: '수입신고수리',
-                        statusColor: 'bg-emerald-500',
-                        completedStep: 6,
-                        steps: [
-                            { title: '입항보고 제출', date: `${year}.03.15 09:30`, done: true },
-                            { title: '입항전 제출', date: `${year}.03.15 10:00`, done: true },
-                            { title: '하선/하차 신고', date: `${year}.03.15 14:20`, done: true },
-                            { title: '보세구역 반입', date: `${year}.03.16 09:00`, done: true },
-                            { title: '수입신고 제출', date: `${year}.03.16 11:00`, done: true },
-                            { title: '수입신고수리 (통관완료)', date: `${year}.03.16 13:40`, done: true },
-                            { title: '물품 반출 대기', date: '반출 대기중', done: false }
-                        ]
-                    };
-                }
+      // 기록 저장
+      saveHistory(blNo);
+    }
 
-                renderResults(data, year);
-                saveToHistory(data.hbl, data.status);
-            }, 600);
-        }
+    // 로컬스토리지 기록 저장
+    function saveHistory(blNo) {
+      let history = JSON.parse(localStorage.getItem('bl_history') || '[]');
+      history = history.filter(item => item.bl !== blNo);
+      history.unshift({ bl: blNo, date: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) });
+      if (history.length > 5) history.pop();
+      localStorage.setItem('bl_history', JSON.stringify(history));
+      renderHistory();
+    }
 
-        // --- Render Cargo Tracking Result ---
-        function renderResults(data, year) {
-            document.getElementById('res-hbl').innerText = data.hbl;
-            document.getElementById('res-goods').innerText = data.goods;
-            document.getElementById('res-weight').innerText = data.weight;
-            document.getElementById('res-vessel').innerText = data.vessel;
-            document.getElementById('res-arrival').innerText = data.arrival;
-            document.getElementById('res-warehouse').innerText = data.warehouse;
-            
-            const badge = document.getElementById('res-status-badge');
-            badge.innerText = data.status;
-            badge.className = `px-2.5 py-1 rounded-full text-xs font-bold text-white shadow-sm ${data.statusColor}`;
+    // 기록 화면 출력
+    function renderHistory() {
+      const history = JSON.parse(localStorage.getItem('bl_history') || '[]');
+      const listEl = document.getElementById('history-list');
 
-            document.getElementById('res-step-num').innerText = data.completedStep;
+      if (history.length === 0) {
+        listEl.innerHTML = '<li class="py-2 text-center text-gray-400">최근 조회된 기록이 없습니다.</li>';
+        return;
+      }
 
-            // Render Timeline Steps
-            const timelineContainer = document.getElementById('timeline-container');
-            timelineContainer.innerHTML = '';
+      listEl.innerHTML = history.map(item => `
+        <li class="py-2 flex justify-between items-center cursor-pointer hover:bg-gray-50 px-1" onclick="document.getElementById('bl-input').value='${item.bl}'; searchBL();">
+          <span class="font-bold text-gray-800">${item.bl}</span>
+          <span class="text-gray-400 text-[10px]">${item.date}</span>
+        </li>
+      `).join('');
+    }
 
-            data.steps.forEach((step, idx) => {
-                const isCurrent = idx + 1 === data.completedStep;
-                const isDone = step.done;
+    // 기록 삭제
+    function clearHistory() {
+      localStorage.removeItem('bl_history');
+      renderHistory();
+    }
 
-                const item = document.createElement('div');
-                item.className = 'relative flex items-start justify-between group';
-
-                // Dot indicator
-                let dotClass = 'bg-gray-300 border-2 border-white';
-                if (isCurrent) {
-                    dotClass = 'bg-unipass-accent ring-4 ring-orange-100 border-2 border-white';
-                } else if (isDone) {
-                    dotClass = 'bg-unipass-blue border-2 border-white';
-                }
-
-                item.innerHTML = `
-                    <div class="absolute -left-[31px] top-0.5 w-4 h-4 rounded-full ${dotClass} flex items-center justify-center">
-                        ${isDone && !isCurrent ? '<i class="fa-solid fa-check text-[8px] text-white"></i>' : ''}
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold ${isCurrent ? 'text-unipass-accent' : isDone ? 'text-gray-900' : 'text-gray-400'}">
-                            ${step.title}
-                            ${isCurrent ? '<span class="ml-1 text-[10px] bg-orange-100 text-orange-700 font-normal px-1.5 py-0.2 rounded">현재위치</span>' : ''}
-                        </p>
-                        <p class="text-[11px] text-gray-400 mt-0.5">${step.date}</p>
-                    </div>
-                    <div>
-                        <span class="text-[10px] font-medium px-2 py-0.5 rounded ${isDone ? 'bg-blue-50 text-unipass-blue' : 'bg-gray-100 text-gray-400'}">
-                            ${isDone ? '완료' : '미완료'}
-                        </span>
-                    </div>
-                `;
-                timelineContainer.appendChild(item);
-            });
-
-            // Uni-pass official link update
-            const unipassUrl = `https://unipass.customs.go.kr/csp/index.do?searchCnd=${data.hbl}`;
-            document.getElementById('btn-unipass-direct').href = unipassUrl;
-
-            document.getElementById('results-section').classList.remove('hidden');
-        }
-
-        // --- History / LocalStorage Handlers ---
-        function saveToHistory(hbl, status) {
-            // Remove duplicates
-            searchHistory = searchHistory.filter(item => item.hbl !== hbl);
-            
-            const newRecord = {
-                hbl: hbl,
-                status: status,
-                timestamp: new Date().toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
-            };
-
-            searchHistory.unshift(newRecord);
-            if (searchHistory.length > 15) searchHistory.pop(); // limit to 15 items
-
-            localStorage.setItem('unipass_hbl_history', JSON.stringify(searchHistory));
-            updateHistoryBadge();
-            renderHistoryList();
-        }
-
-        function updateHistoryBadge() {
-            const badge = document.getElementById('history-badge');
-            if (searchHistory.length > 0) {
-                badge.innerText = searchHistory.length;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
-
-        function renderHistoryList() {
-            const listEl = document.getElementById('history-list');
-            if (searchHistory.length === 0) {
-                listEl.innerHTML = `
-                    <div class="text-center py-8 text-gray-400 text-xs">
-                        <i class="fa-solid fa-folder-open text-2xl mb-2 text-gray-300"></i>
-                        <p>저장된 B/L 조회 기록이 없습니다.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            listEl.innerHTML = searchHistory.map(item => `
-                <div class="p-3 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-between hover:bg-gray-100 transition">
-                    <div onclick="searchFromHistory('${item.hbl}')" class="cursor-pointer flex-1">
-                        <div class="flex items-center gap-2">
-                            <span class="font-mono font-bold text-xs text-gray-900">${item.hbl}</span>
-                            <span class="text-[10px] px-2 py-0.2 rounded-full bg-blue-100 text-unipass-blue font-semibold">${item.status}</span>
-                        </div>
-                        <span class="text-[10px] text-gray-400 block mt-1"><i class="fa-regular fa-clock mr-1"></i>${item.timestamp}</span>
-                    </div>
-                    <button onclick="deleteHistoryItem('${item.hbl}')" class="text-gray-400 hover:text-red-500 p-2">
-                        <i class="fa-solid fa-trash-can text-xs"></i>
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        function searchFromHistory(hbl) {
-            document.getElementById('hbl-input').value = hbl;
-            toggleHistoryDrawer(false);
-            document.getElementById('search-form').dispatchEvent(new Event('submit'));
-        }
-
-        function deleteHistoryItem(hbl) {
-            searchHistory = searchHistory.filter(i => i.hbl !== hbl);
-            localStorage.setItem('unipass_hbl_history', JSON.stringify(searchHistory));
-            updateHistoryBadge();
-            renderHistoryList();
-        }
-
-        function clearHistory() {
-            if (confirm('최근 조회 기록을 모두 삭제하시겠습니까?')) {
-                searchHistory = [];
-                localStorage.removeItem('unipass_hbl_history');
-                updateHistoryBadge();
-                renderHistoryList();
-            }
-        }
-
-        function toggleHistoryDrawer(show) {
-            const drawer = document.getElementById('history-drawer');
-            if (show) {
-                drawer.classList.remove('hidden');
-            } else {
-                drawer.classList.add('hidden');
-            }
-        }
-
-        // --- Camera Barcode Scanner Functions ---
-        function openScanner() {
-            document.getElementById('scanner-modal').classList.remove('hidden');
-            document.getElementById('scanner-modal').classList.add('flex');
-
-            try {
-                html5QrcodeScanner = new Html5Qrcode("reader");
-                const config = { fps: 10, qrbox: { width: 250, height: 180 } };
-
-                html5QrcodeScanner.start(
-                    { facingMode: "environment" },
-                    config,
-                    onScanSuccess,
-                    onScanFailure
-                ).catch(err => {
-                    console.warn("Camera start failed, fallback mode available", err);
-                });
-            } catch (e) {
-                console.error("Scanner setup error", e);
-            }
-        }
-
-        function onScanSuccess(decodedText) {
-            closeScanner();
-            // Filter extracted code to clean alphanumeric B/L
-            const cleanText = decodedText.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-            document.getElementById('hbl-input').value = cleanText || decodedText;
-            document.getElementById('btn-clear-input').classList.remove('hidden');
-            
-            // Auto search on scan
-            document.getElementById('search-form').dispatchEvent(new Event('submit'));
-        }
-
-        function onScanFailure(error) {
-            // Frame scanning error silencer
-        }
-
-        function closeScanner() {
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.stop().then(() => {
-                    html5QrcodeScanner.clear();
-                }).catch(err => console.log(err));
-            }
-            document.getElementById('scanner-modal').classList.add('hidden');
-            document.getElementById('scanner-modal').classList.remove('flex');
-        }
-
-        function simulateScan() {
-            closeScanner();
-            fillSample('HBL202603891');
-            document.getElementById('search-form').dispatchEvent(new Event('submit'));
-        }
-    </script>
+    // 페이지 로드시 기록 초기화
+    window.onload = renderHistory;
+  </script>
 </body>
 </html>
